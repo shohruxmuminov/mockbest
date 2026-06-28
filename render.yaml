@@ -1,0 +1,31 @@
+# One-click deploy to Render (https://render.com).
+# Provides a persistent disk so candidate data and uploads survive restarts.
+services:
+  - type: web
+    name: ielts-mock-test
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: shohruxmuminov201@gmail.com
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATA_DIR
+        value: /var/data/db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+    disk:
+      name: ielts-data
+      mountPath: /var/data
+      sizeGB: 5
