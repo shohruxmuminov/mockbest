@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useAuth } from '../lib/auth.jsx';
-import { connectSocket } from '../lib/socket.js';
+import { examState } from '../lib/examState.js';
 import HtmlFrame from '../components/HtmlFrame.jsx';
 import AnswerSheet from '../components/AnswerSheet.jsx';
 
@@ -39,11 +39,9 @@ export default function TestRunner() {
 
   const audioRef = useRef(null);
   const audioStarted = useRef(false);
-  const socketRef = useRef(null);
 
   useEffect(() => {
     api.get(`/mock-tests/${id}`).then(setTest).catch((e) => setError(e.message));
-    socketRef.current = connectSocket();
   }, [id]);
 
   const flow = useMemo(() => {
@@ -58,12 +56,13 @@ export default function TestRunner() {
   const step = stepIndex >= 0 ? flow[stepIndex] : 'intro';
   const running = stepIndex >= 0;
 
-  // Report the candidate's current section to the admin monitor.
+  // Report the candidate's current section to the admin monitor (via heartbeat).
   useEffect(() => {
-    if (running && socketRef.current) {
-      socketRef.current.emit('candidate:section', { section: monitorSection(step) });
-    }
+    examState.set(running ? monitorSection(step) : 'idle');
   }, [step, running]);
+
+  // Reset section when leaving the runner.
+  useEffect(() => () => examState.set('idle'), []);
 
   const requestFs = useCallback(async () => {
     try {
@@ -89,7 +88,7 @@ export default function TestRunner() {
     const onFsChange = () => {
       if (running && !document.fullscreenElement) {
         setShowReenter(true);
-        socketRef.current?.emit('monitor:fullscreen-exit', { section: monitorSection(step) });
+        api.post('/monitor/fullscreen-exit', { section: monitorSection(step) }).catch(() => {});
       }
     };
     document.addEventListener('fullscreenchange', onFsChange);

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { connectSocket } from '../../lib/socket.js';
+import { useEffect, useRef, useState } from 'react';
+import { api } from '../../lib/api.js';
 import MockTestsTab from './MockTestsTab.jsx';
 import CandidatesTab from './CandidatesTab.jsx';
 import MonitoringTab from './MonitoringTab.jsx';
@@ -14,49 +14,54 @@ const TABS = [
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('monitor');
+  const [online, setOnline] = useState([]);
+  const [alerts, setAlerts] = useState([]);
+  const [dismissed, setDismissed] = useState(() => new Set());
+  const inFlight = useRef(false);
 
-  // Admin realtime monitoring state lives here so alerts keep arriving while
-  // the admin browses other tabs.
-  const [online, setOnline] = useState([]); // [{candidateId, fullName, code, section}]
-  const [alerts, setAlerts] = useState([]); // fullscreen-exit alerts feed
-
+  // Poll the monitor endpoint so alerts keep arriving on every tab.
   useEffect(() => {
-    const socket = connectSocket();
-
-    const upsert = (entry) =>
-      setOnline((prev) => {
-        const rest = prev.filter((p) => p.candidateId !== entry.candidateId);
-        return [...rest, entry];
-      });
-
-    socket.on('monitor:presence', (list) => setOnline(list));
-    socket.on('monitor:join', upsert);
-    socket.on('monitor:update', ({ candidateId, section }) =>
-      setOnline((prev) => prev.map((p) => (p.candidateId === candidateId ? { ...p, section } : p)))
-    );
-    socket.on('monitor:left', ({ candidateId }) =>
-      setOnline((prev) => prev.filter((p) => p.candidateId !== candidateId))
-    );
-    socket.on('monitor:alert', (a) =>
-      setAlerts((prev) => [{ ...a, id: `${a.candidateId}-${a.timestamp}` }, ...prev].slice(0, 50))
-    );
-
+    let stopped = false;
+    const poll = async () => {
+      if (inFlight.current || stopped) return;
+      inFlight.current = true;
+      try {
+        const r = await api.get('/monitor/admin');
+        if (stopped) return;
+        setOnline(r.online || []);
+        setAlerts(r.alerts || []);
+      } catch {
+        /* ignore transient errors */
+      } finally {
+        inFlight.current = false;
+      }
+    };
+    poll();
+    const idt = setInterval(poll, 3000);
     return () => {
-      socket.off('monitor:presence');
-      socket.off('monitor:join');
-      socket.off('monitor:update');
-      socket.off('monitor:left');
-      socket.off('monitor:alert');
+      stopped = true;
+      clearInterval(idt);
     };
   }, []);
 
-  const sendWarning = (candidateId) => {
-    connectSocket().emit('admin:warning', { candidateId });
+  const sendWarning = async (candidateId) => {
+    try {
+      await api.post('/monitor/warn', { candidateId });
+    } catch (e) {
+      alert(e.message);
+    }
   };
-  const banCandidate = (candidateId) => {
-    connectSocket().emit('admin:ban', { candidateId });
-    setOnline((prev) => prev.filter((p) => p.candidateId !== candidateId));
+  const banCandidate = async (candidateId) => {
+    try {
+      await api.post('/monitor/ban', { candidateId });
+      setOnline((prev) => prev.filter((p) => p.candidateId !== candidateId));
+    } catch (e) {
+      alert(e.message);
+    }
   };
+
+  const visibleAlerts = alerts.filter((a) => !dismissed.has(a.id));
+  const clearAlerts = () => setDismissed(new Set(alerts.map((a) => a.id)));
 
   return (
     <div className="page container" style={{ paddingBottom: 60 }}>
@@ -65,8 +70,8 @@ export default function AdminDashboard() {
           <h2>Admin Panel</h2>
           <p className="muted">Manage mock tests, candidates and monitor live examinations.</p>
         </div>
-        {alerts.length > 0 && (
-          <span className="chip on"><span className="live-dot" />{alerts.length} live alert(s)</span>
+        {visibleAlerts.length > 0 && (
+          <span className="chip on"><span className="live-dot" />{visibleAlerts.length} live alert(s)</span>
         )}
       </div>
 
@@ -82,10 +87,10 @@ export default function AdminDashboard() {
       {tab === 'monitor' && (
         <MonitoringTab
           online={online}
-          alerts={alerts}
+          alerts={visibleAlerts}
           onWarn={sendWarning}
           onBan={banCandidate}
-          onClearAlerts={() => setAlerts([])}
+          onClearAlerts={clearAlerts}
         />
       )}
       {tab === 'tests' && <MockTestsTab />}

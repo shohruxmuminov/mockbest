@@ -110,7 +110,7 @@ export default function CandidatesTab() {
                       <span className="code-badge" onClick={() => copy(c.code)} title="Click to copy" style={{ cursor: 'pointer' }}>{c.code}</span>
                     </td>
                     <td>{c.banned ? <span style={{ color: 'var(--red)' }}>● Banned</span> : <span style={{ color: '#1aa251' }}>● Active</span>}</td>
-                    <td className="muted">{new Date(c.createdAt + 'Z').toLocaleDateString()}</td>
+                    <td className="muted">{new Date(c.createdAt).toLocaleDateString()}</td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <button className="btn btn-ghost btn-sm" onClick={() => toggleBan(c)}>{c.banned ? 'Unban' : 'Ban'}</button>{' '}
                       <button className="btn btn-ghost btn-sm" onClick={() => remove(c)}>Delete</button>
