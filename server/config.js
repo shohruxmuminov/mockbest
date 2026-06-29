@@ -6,39 +6,35 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const ROOT = path.resolve(__dirname, '..');
 
 export const config = {
   port: parseInt(process.env.PORT || '8080', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
 
+  // Postgres (Neon on Vercel, local Postgres in development).
+  databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || '',
+
   // Auth
   jwtSecret:
     process.env.JWT_SECRET ||
     'ielts-dev-secret-change-me-in-production-0xDEADBEEF',
-  // The only Google account allowed to access the Admin Panel.
   adminEmail: (process.env.ADMIN_EMAIL || 'shohruxmuminov201@gmail.com')
     .trim()
     .toLowerCase(),
-  // Google OAuth client id used to verify Google Sign-In ID tokens (admin).
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
-  // Optional fallback password login for the admin when Google OAuth is not
-  // configured in the deployment environment. Leave empty to disable.
   adminPassword: process.env.ADMIN_PASSWORD || '',
+  // Simple admin access code for the Admin Panel (default 2010).
+  adminCode: (process.env.ADMIN_CODE || '2010').toString(),
 
-  // Storage
-  dataDir: process.env.DATA_DIR || path.join(ROOT, 'data'),
-  uploadDir: process.env.UPLOAD_DIR || path.join(ROOT, 'server', 'uploads'),
+  // Max upload size (default 200 MB; note Vercel caps request body at ~4.5 MB).
+  maxUploadBytes: parseInt(process.env.MAX_UPLOAD_BYTES || '209715200', 10),
 
   // Paths
   root: ROOT,
-  clientDist: path.join(ROOT, 'client', 'dist'),
+  clientDist: path.join(ROOT, 'dist'),
 
-  // Limits
-  maxUploadBytes: parseInt(process.env.MAX_UPLOAD_BYTES || '209715200', 10), // 200 MB
-
-  // Test timing (seconds) — answer sheets get 5 minutes each.
+  // Answer sheets get 5 minutes each.
   answerSheetSeconds: parseInt(process.env.ANSWER_SHEET_SECONDS || '300', 10),
 };
 

@@ -1,0 +1,16 @@
+IELTS Mock Test — ishga tushirish (Windows, npm install KERAK EMAS)
+
+1) Node.js o'rnatilgan bo'lsin (https://nodejs.org).
+2) Bu papkada CMD oching.
+3) Bazani ulang (Supabase Transaction pooler satri):
+      set DATABASE_URL=postgresql://postgres.xxx:PAROL@...pooler.supabase.com:6543/postgres
+      set JWT_SECRET=mening-maxfiy-kalitim
+      set ADMIN_CODE=2010
+4) Ishga tushiring:
+      npm start
+5) Brauzerda oching: http://localhost:8080
+   Admin: /admin/login -> kod 2010
+
+Eslatma: node_modules shu yerda Linux/Windows uchun mos (server qismi, toza JS).
+Agar kodni QAYTA build qilmoqchi bo'lsangiz (npm run build), Windows uchun
+to'liq modullarni o'rnating: npm install

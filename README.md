@@ -4,24 +4,26 @@ A production-ready IELTS mock test platform with a premium 3D dashboard, an
 admin panel for managing tests and candidates, real-time exam monitoring, and a
 secure full-screen examination flow (Listening → Reading → Writing).
 
+**Built to deploy on [Vercel](https://vercel.com)** — Express runs as a
+serverless function and everything (data **and** uploaded files) is stored in
+**Postgres** (works with **Supabase** or **Neon**). Only one service to configure.
+
 > **Prepare Smart. Score High.**
 
 ---
 
 ## ✨ Features
 
-- **3D dashboard** — lightweight Three.js background (floating geometry, particles, smooth camera, glassmorphism), responsive on desktop / tablet / mobile, with light & dark themes.
-- **Two login methods**
-  - **Admin** signs in with **Google** — restricted to a single authorized account (`ADMIN_EMAIL`). An optional password fallback is available when Google OAuth isn't configured.
-  - **Candidates** simply enter their unique **14-digit code** — no auth screen, name shown top-right after login.
-- **Mock Test Management** — upload **Listening (HTML + optional Audio)**, **Reading (HTML)** and **Writing (HTML)**. Tests are stored permanently and appear instantly in chronological order.
-- **HTML rendering** — uploaded HTML is rendered exactly like a browser inside a sandboxed iframe (CSS + JS execute); candidates never see source code.
-- **Candidate Management** — generate guaranteed-unique 14-digit codes, search by name or code, ban/unban.
-- **Exam flow** — Listening → 40-question answer sheet (5 min, test visible beside it) → Reading → 40-question answer sheet (5 min) → Writing → PDF essay upload → Thank You page.
-- **Full-screen security** — only the test interface enters full screen (after *Start Test*). Leaving full screen instantly alerts the admin with name, code, timestamp and section.
-- **Real-time warnings & bans** — admin warnings appear instantly as a centered modal even mid-test and in full screen; bans end the session immediately (Socket.IO).
+- **3D dashboard** — lightweight Three.js background, responsive, light & dark themes.
+- **Two login methods** — admin signs in with a simple **access code** (default `2010`) or **Google** (restricted to `ADMIN_EMAIL`); candidates enter their unique **14-digit code**.
+- **Mock Test Management** — upload **Listening (HTML + optional Audio)**, **Reading (HTML)** and **Writing (HTML)**; stored permanently in Postgres and shown in order.
+- **HTML rendering** — uploaded HTML renders exactly like a browser in a sandboxed iframe (CSS + JS execute); candidates never see source code.
+- **Candidate Management** — guaranteed-unique 14-digit codes, search by name or code, ban/unban.
+- **Exam flow** — Listening → 40-question answer sheet (5 min, test visible beside it) → Reading → 40-question answer sheet (5 min) → Writing → PDF essay upload → Thank You.
+- **Full-screen security** — only the test enters full screen (after *Start Test*); leaving it alerts the admin with name, code, timestamp and section.
+- **Real-time warnings & bans** — admin warnings appear instantly as a centered modal even mid-test; bans end the session immediately (delivered via a fast polling channel that works on serverless).
 - **Admin review** — search by 14-digit code to view Listening/Reading answer sheets and open/download the Writing PDF.
-- **Persistent storage** — SQLite database + on-disk uploads survive refreshes and restarts.
+- **Persistent storage** — Postgres (data + uploaded files): survives refreshes, redeploys and restarts.
 
 ---
 
@@ -29,103 +31,89 @@ secure full-screen examination flow (Listening → Reading → Writing).
 
 | Layer        | Technology |
 |--------------|-----------|
-| Backend      | Node.js, Express, Socket.IO |
-| Database     | SQLite (`better-sqlite3`) — file-based, persistent |
-| Uploads      | Multer (HTML / audio / PDF) |
+| Hosting      | Vercel (serverless function + static client) |
+| Backend      | Node.js, Express (as a Vercel function) |
+| Database     | Postgres — [Supabase](https://supabase.com) / [Neon](https://neon.tech) (`pg`) |
+| File storage | Postgres (uploaded files stored as `bytea`) |
+| Real-time    | Lightweight polling (`/api/monitor`) — serverless-friendly |
 | Auth         | Google Identity Services + JWT |
-| Frontend     | React, React Router, Vite |
-| 3D / visuals | Three.js |
-
-The Express server serves the built React client in production, so the whole
-app runs as **one deployable service**.
+| Frontend     | React, React Router, Vite, Three.js |
 
 ---
 
-## 🚀 Local development
+## 🚀 Deploy to Vercel (recommended)
+
+1. **Push this repo to GitHub** and import it into Vercel
+   (or run `vercel` from the Vercel CLI).
+2. **Get a Postgres connection string.** With **Supabase**: Dashboard →
+   Project Settings → Database → Connection string → **Transaction pooler** →
+   copy the URI and fill in your password. (The pooler is required on Vercel —
+   the direct connection is IPv6-only.) Neon's pooled string works too.
+3. **Set environment variables** (Project → Settings → Environment Variables):
+   - `DATABASE_URL` — the Postgres pooler connection string from step 2.
+   - `JWT_SECRET` — a long random string.
+   - `ADMIN_CODE` — the admin panel code (default `2010` if unset).
+   - `ADMIN_EMAIL` — `shohruxmuminov201@gmail.com` (already the default).
+   - `GOOGLE_CLIENT_ID` — *(optional)* your Google OAuth Web client ID (see below).
+4. **Deploy.** `vercel.json` already wires the build, the API function and the SPA routing.
+
+The included `vercel.json`:
+- builds the React client (`npm run vercel-build` → `client/dist`),
+- serves it statically,
+- routes every `/api/*` request to the Express function in `api/index.js`.
+
+The database schema is created automatically on first request.
+
+---
+
+## 💻 Local development
+
+Requires a local (or remote) Postgres database.
 
 ```bash
-# 1. Install server dependencies
+# 1. Install dependencies
 npm install
-
-# 2. Install client dependencies
 npm run client:install
 
-# 3. (optional) configure environment
-cp .env.example .env   # then edit values
+# 2. Configure env
+cp .env.example .env
+#   set DATABASE_URL (e.g. postgres://postgres:postgres@127.0.0.1:5432/ielts)
+#   set ADMIN_CODE=2010          (admin panel code)
 
-# 4a. Run the API (terminal 1)
-npm run dev:server     # http://localhost:8080
+# 3a. API (terminal 1)
+npm run dev:server          # http://localhost:8080
 
-# 4b. Run the client dev server (terminal 2)
-npm run dev:client     # http://localhost:5173 (proxies /api & /socket.io)
+# 3b. Client (terminal 2)
+npm run dev:client          # http://localhost:5173 (proxies /api)
 ```
 
-Open <http://localhost:5173>.
+> Everything (including uploaded files) is stored in Postgres, so a plain local
+> Postgres database is all you need to test every feature.
 
-### Production build (single server)
-
+Production build locally:
 ```bash
-npm install
-npm run build      # builds the client into client/dist
-npm start          # serves API + client on PORT (default 8080)
+npm run build && npm start   # serves API + client on PORT
 ```
 
 ---
 
 ## 🔐 Configuration
 
-All configuration is via environment variables — see [`.env.example`](./.env.example).
-
-| Variable          | Description |
-|-------------------|-------------|
-| `PORT`            | HTTP port (default `8080`). |
-| `JWT_SECRET`      | Secret for signing session tokens. **Change in production.** |
-| `ADMIN_EMAIL`     | The only Google account allowed admin access. |
-| `GOOGLE_CLIENT_ID`| Google OAuth Web client ID used to verify Sign-In. Empty = Google login disabled. |
-| `ADMIN_PASSWORD`  | Optional password-login fallback for admin. Empty = disabled. |
-| `DATA_DIR`        | Directory for the SQLite database (persist this). |
-| `UPLOAD_DIR`      | Directory for uploaded files (persist this). |
-| `MAX_UPLOAD_BYTES`| Max upload size (default 200 MB). |
+| Variable               | Description |
+|------------------------|-------------|
+| `DATABASE_URL`         | Postgres connection string (Neon on Vercel). |
+| `JWT_SECRET`           | Secret for signing session tokens. **Change in production.** |
+| `ADMIN_CODE`           | Admin Panel access code (default `2010`). |
+| `ADMIN_EMAIL`          | The only Google account allowed admin access. |
+| `GOOGLE_CLIENT_ID`     | Optional Google OAuth Web client ID. Empty = Google login disabled. |
+| `ADMIN_PASSWORD`       | Optional admin password fallback. Empty = disabled. |
+| `MAX_UPLOAD_BYTES`     | Max upload size (default 200 MB; Vercel caps request body at ~4.5 MB). |
 
 ### Enabling Google Sign-In
 
-1. In [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials), create an **OAuth client ID** of type **Web application**.
-2. Add your site origin (e.g. `http://localhost:5173` and your production URL) to **Authorized JavaScript origins**.
-3. Set `GOOGLE_CLIENT_ID` to the generated client ID.
-
-Only `ADMIN_EMAIL` will be granted access — any other Google account is rejected.
-If you don't configure Google OAuth, set `ADMIN_PASSWORD` to use the password
-fallback instead.
-
----
-
-## ☁️ Deployment
-
-### Render (recommended — config included)
-
-This repo ships a [`render.yaml`](./render.yaml) with a **persistent disk** so
-data survives restarts. Create a new Blueprint on Render pointing at the repo,
-then set `GOOGLE_CLIENT_ID` (and/or `ADMIN_PASSWORD`) in the dashboard.
-
-### Docker
-
-```bash
-docker build -t ielts-mock .
-docker run -p 8080:8080 \
-  -e JWT_SECRET=change-me \
-  -e GOOGLE_CLIENT_ID=your-client-id \
-  -v ielts-data:/app/data \
-  -v ielts-uploads:/app/server/uploads \
-  ielts-mock
-```
-
-### Any Node host (Railway / Fly / VPS)
-
-```bash
-npm install && npm run build && npm start
-```
-
-Make sure `DATA_DIR` and `UPLOAD_DIR` point at persistent storage.
+1. In [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials), create an **OAuth client ID** → **Web application**.
+2. Add your origins (e.g. `http://localhost:5173` and your Vercel URL) to **Authorized JavaScript origins**.
+3. Set `GOOGLE_CLIENT_ID`. Only `ADMIN_EMAIL` is granted access; any other account is rejected.
 
 ---
 
@@ -133,20 +121,21 @@ Make sure `DATA_DIR` and `UPLOAD_DIR` point at persistent storage.
 
 ```
 .
-├── server/                 # Express API + Socket.IO
-│   ├── index.js            # app entry, serves client in prod
+├── api/
+│   └── index.js            # Vercel serverless entry → Express app
+├── server/                 # Express API (shared by Vercel & local server)
+│   ├── app.js              # builds the Express app
+│   ├── index.js            # local dev server (listens on PORT)
 │   ├── config.js           # env configuration
-│   ├── db.js               # SQLite schema & connection
+│   ├── db.js               # Postgres pool + schema
 │   ├── auth.js             # JWT, Google verification, code generation
-│   ├── upload.js           # Multer storage
-│   ├── socket.js           # real-time monitoring / warnings / ban
-│   └── routes/             # auth, mock-tests, candidates, submissions, review, files
+│   └── routes/             # auth, mock-tests, candidates, submissions, review, monitor, files
 ├── client/                 # React + Vite + Three.js
 │   └── src/
 │       ├── pages/          # Home, logins, dashboard, test runner, admin
 │       ├── components/     # 3D background, navbar, modal, answer sheet, …
-│       └── lib/            # api client, auth context, socket, theme
-├── Dockerfile / render.yaml / Procfile
+│       └── lib/            # api client, auth, exam state, theme
+├── vercel.json
 └── .env.example
 ```
 
@@ -161,6 +150,6 @@ Make sure `DATA_DIR` and `UPLOAD_DIR` point at persistent storage.
 5. **Writing** → upload essay **PDF** ("Send Essay to Admin").
 6. Full screen exits automatically → **Thank You** page.
 
-Throughout, the admin **Monitoring** tab shows who is online, their current
-section, and any full-screen-exit alerts — with one-click **Warning** and
-**Ban** actions delivered in real time.
+The admin **Monitoring** tab shows who is online, their current section, and
+full-screen-exit alerts — with one-click **Warning** and **Ban** actions
+delivered in near real time.
