@@ -1,0 +1,25 @@
+import { io } from 'socket.io-client';
+import { getToken } from './api.js';
+
+let socket = null;
+
+export function connectSocket() {
+  if (socket && socket.connected) return socket;
+  if (socket) socket.disconnect();
+  socket = io('/', {
+    auth: { token: getToken() },
+    transports: ['websocket', 'polling'],
+  });
+  return socket;
+}
+
+export function getSocket() {
+  return socket;
+}
+
+export function disconnectSocket() {
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+}

@@ -1,29 +1,31 @@
-# One-click deploy to Render (https://render.com) — RECOMMENDED.
-# Runs the Express server (which serves the React client AND the API), so there
-# is NO serverless 404 routing problem. Render also creates the Postgres
-# database and wires DATABASE_URL automatically — zero database setup for you.
-databases:
-  - name: ielts-db
-    plan: free
-
+# One-click deploy to Render (https://render.com).
+# Provides a persistent disk so candidate data and uploads survive restarts.
 services:
   - type: web
     name: ielts-mock-test
     runtime: node
-    plan: free
+    plan: starter
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 8080
       - key: JWT_SECRET
         generateValue: true
-      - key: ADMIN_CODE
-        value: "2010"
       - key: ADMIN_EMAIL
         value: shohruxmuminov201@gmail.com
-      - key: DATABASE_URL
-        fromDatabase:
-          name: ielts-db
-          property: connectionString
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATA_DIR
+        value: /var/data/db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+    disk:
+      name: ielts-data
+      mountPath: /var/data
+      sizeGB: 5

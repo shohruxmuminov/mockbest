@@ -14,7 +14,7 @@ function SheetTable({ title, sheets }) {
     <div className="card" style={{ padding: 22 }}>
       {sheets.map((s) => (
         <div key={s.id} style={{ marginBottom: 18 }}>
-          <h4 style={{ marginTop: 0 }}>{title} — {s.testName} <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>({new Date(s.submittedAt).toLocaleString()})</span></h4>
+          <h4 style={{ marginTop: 0 }}>{title} — {s.testName} <span className="muted" style={{ fontWeight: 400, fontSize: 13 }}>({new Date(s.submittedAt + 'Z').toLocaleString()})</span></h4>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 8 }}>
             {s.answers.map((a, i) => (
               <div key={i} style={{ display: 'flex', gap: 6, fontSize: 14, padding: '5px 8px', background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border)' }}>
@@ -97,7 +97,7 @@ export default function ReviewTab() {
                     <tr key={w.id}>
                       <td>{w.testName}</td>
                       <td>{w.originalName}</td>
-                      <td className="muted">{new Date(w.submittedAt).toLocaleString()}</td>
+                      <td className="muted">{new Date(w.submittedAt + 'Z').toLocaleString()}</td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <a className="btn btn-ghost btn-sm" href={w.file} target="_blank" rel="noreferrer">Open</a>{' '}
                         <a className="btn btn-primary btn-sm" href={w.file} download={w.originalName}>Download</a>
@@ -120,7 +120,7 @@ export default function ReviewTab() {
                       <td>{ev.type.replace('_', ' ')}</td>
                       <td>{ev.section || '—'}</td>
                       <td className="muted">{ev.detail}</td>
-                      <td className="muted">{new Date(ev.created_at).toLocaleString()}</td>
+                      <td className="muted">{new Date(ev.created_at + 'Z').toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>

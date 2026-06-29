@@ -62,7 +62,6 @@ export default function MockTestsTab() {
     }
     setSubmitting(true);
     try {
-      setMsg({ type: 'ok', text: 'Uploading… please wait.' });
       const form = new FormData();
       form.append('title', title);
       form.append('testName', testName);

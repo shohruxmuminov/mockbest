@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from './Modal.jsx';
-import { api } from '../lib/api.js';
+import { connectSocket } from '../lib/socket.js';
 import { useAuth } from '../lib/auth.jsx';
-import { examState } from '../lib/examState.js';
 
 async function exitFullscreen() {
   try {
@@ -14,50 +13,30 @@ async function exitFullscreen() {
 }
 
 /**
- * Mounted for the whole candidate session. Sends a heartbeat every few seconds
- * (keeping the candidate visible on the admin monitor) and reacts to admin
- * warnings / bans returned in the heartbeat response — shown as centered modal
- * dialogs that appear even mid-test in full screen.
+ * Mounted for the whole candidate session. Keeps the realtime socket alive so
+ * the admin always sees the candidate's presence, and delivers admin warnings
+ * and bans instantly as centered modal dialogs — even during an active test in
+ * full-screen mode.
  */
 export default function CandidateRealtime() {
   const { session, logout } = useAuth();
   const [warning, setWarning] = useState(null);
   const [banned, setBanned] = useState(false);
   const nav = useNavigate();
-  const inFlight = useRef(false);
 
   useEffect(() => {
-    let stopped = false;
-
-    const beat = async () => {
-      if (inFlight.current || stopped) return;
-      inFlight.current = true;
-      try {
-        const r = await api.post('/monitor/heartbeat', { section: examState.get() });
-        if (stopped) return;
-        if (r.warning) setWarning(r.fullName || session?.fullName || 'Candidate');
-        if (r.banned) {
-          setWarning(null);
-          setBanned(true);
-          exitFullscreen();
-        }
-      } catch (e) {
-        // A 403 on the heartbeat means the candidate was banned mid-exam.
-        if (!stopped && e.status === 403) {
-          setWarning(null);
-          setBanned(true);
-          exitFullscreen();
-        }
-      } finally {
-        inFlight.current = false;
-      }
+    const socket = connectSocket();
+    const onWarning = ({ fullName }) => setWarning(fullName || session?.fullName || 'Candidate');
+    const onBanned = () => {
+      setWarning(null);
+      setBanned(true);
+      exitFullscreen();
     };
-
-    beat();
-    const id = setInterval(beat, 3000);
+    socket.on('candidate:warning', onWarning);
+    socket.on('candidate:banned', onBanned);
     return () => {
-      stopped = true;
-      clearInterval(id);
+      socket.off('candidate:warning', onWarning);
+      socket.off('candidate:banned', onBanned);
     };
   }, [session]);
 

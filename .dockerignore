@@ -1,0 +1,9 @@
+node_modules
+client/node_modules
+client/dist
+data
+server/uploads/*
+!server/uploads/.gitkeep
+.git
+.env
+*.log

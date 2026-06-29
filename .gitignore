@@ -5,8 +5,10 @@ client/node_modules/
 # Build output
 client/dist/
 
-# Vercel
-.vercel
+# Persistent data & uploads (never commit candidate data or uploaded files)
+data/
+server/uploads/*
+!server/uploads/.gitkeep
 
 # Env
 .env
