@@ -1,19 +1,17 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
-const API_TARGET = process.env.VITE_API_TARGET || 'http://localhost:8080';
-
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
     proxy: {
-      '/api': { target: API_TARGET, changeOrigin: true },
-      '/socket.io': { target: API_TARGET, ws: true, changeOrigin: true },
-    },
-  },
-  build: {
-    outDir: 'dist',
-    chunkSizeWarningLimit: 1200,
-  },
-});
+      '/api': 'http://localhost:3001',
+      '/uploads': 'http://localhost:3001',
+      '/socket.io': {
+        target: 'http://localhost:3001',
+        ws: true
+      }
+    }
+  }
+})

@@ -1,0 +1,26 @@
+.login-container {
+  height: 100vh;
+  width: 100vw;
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.logo {
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.error-message {
+  color: #E63946;
+  background: rgba(230, 57, 70, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
