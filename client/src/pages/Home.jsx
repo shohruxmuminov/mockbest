@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api.js';
 import './Home.css';
 
 export default function Home() {
@@ -21,21 +22,11 @@ export default function Home() {
     }
 
     try {
-      const res = await fetch('/api/auth/candidate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: candidateCode })
-      });
-      const data = await res.json();
-      
-      if (data.token) {
-        login(data.token, { type: 'candidate', ...data.candidate });
-        navigate('/dashboard');
-      } else {
-        setError(data.error || 'Invalid Candidate Code');
-      }
+      const data = await api.post('/auth/candidate', { code: candidateCode });
+      login(data.token, { type: 'candidate', ...data.candidate });
+      navigate('/dashboard');
     } catch (err) {
-      setError('Connection failed.');
+      setError(err.message);
     }
   };
 
@@ -44,21 +35,11 @@ export default function Home() {
     setError('');
     
     try {
-      const res = await fetch('/api/auth/admin/code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: adminCode })
-      });
-      const data = await res.json();
-      
-      if (data.token) {
-        login(data.token, { type: 'admin', ...data.admin });
-        navigate('/admin');
-      } else {
-        setError(data.error || 'Incorrect admin code');
-      }
+      const data = await api.post('/auth/admin/code', { code: adminCode });
+      login(data.token, { type: 'admin', ...data.admin });
+      navigate('/admin');
     } catch (err) {
-      setError('Connection failed.');
+      setError(err.message);
     }
   };
 
