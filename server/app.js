@@ -41,6 +41,17 @@ export function createApp() {
   app.use((err, req, res, next) => {
     if (res.headersSent) return next(err);
     console.error('[api error]', err.message);
+    
+    // Database connection errors
+    if (err.message && err.message.includes('DATABASE_URL')) {
+      return res.status(503).json({ error: 'Database service is not configured. Please try again later.' });
+    }
+    
+    // ENOTFOUND errors (database host not found)
+    if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED') {
+      return res.status(503).json({ error: 'Database service is unavailable. Please try again later.' });
+    }
+    
     const status = err.status || 500;
     res.status(status).json({ error: err.message || 'Internal server error.' });
   });

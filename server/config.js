@@ -12,16 +12,17 @@ if (process.env.NODE_ENV !== 'production') {
 dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
 
 export const config = {
   port: parseInt(process.env.PORT || '8080', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
 
-  // Postgres (Neon on Vercel, local Postgres in development).
+  // Database Configuration
   databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || '',
+
+  // JWT Configuration
+  jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-change-in-production',
 
   // Admin Configuration
   adminEmail: (process.env.ADMIN_EMAIL || 'admin@example.com')

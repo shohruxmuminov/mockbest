@@ -29,21 +29,27 @@ router.post('/candidate', async (req, res, next) => {
     if (raw.length !== 14) {
       return res.status(400).json({ error: 'Candidate code must be exactly 14 digits.' });
     }
-    const candidate = await one(
-      'SELECT id, full_name, code, banned FROM candidates WHERE code = $1',
-      [raw]
-    );
-    if (!candidate) {
-      return res.status(404).json({ error: 'Invalid candidate code. Please check and try again.' });
+    
+    try {
+      const candidate = await one(
+        'SELECT id, full_name, code, banned FROM candidates WHERE code = $1',
+        [raw]
+      );
+      if (!candidate) {
+        return res.status(404).json({ error: 'Invalid candidate code. Please check and try again.' });
+      }
+      if (candidate.banned) {
+        return res.status(403).json({ error: 'This candidate has been banned from the examination.' });
+      }
+      const token = signToken({ role: 'candidate', id: candidate.id, code: candidate.code });
+      res.json({
+        token,
+        candidate: { id: candidate.id, fullName: candidate.full_name, code: candidate.code },
+      });
+    } catch (dbErr) {
+      console.error('Database error in candidate login:', dbErr.message);
+      return res.status(503).json({ error: 'Database service unavailable. Please try again later.' });
     }
-    if (candidate.banned) {
-      return res.status(403).json({ error: 'This candidate has been banned from the examination.' });
-    }
-    const token = signToken({ role: 'candidate', id: candidate.id, code: candidate.code });
-    res.json({
-      token,
-      candidate: { id: candidate.id, fullName: candidate.full_name, code: candidate.code },
-    });
   } catch (err) {
     next(err);
   }

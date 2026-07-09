@@ -6,10 +6,19 @@ import { createApp } from './app.js';
 
 async function start() {
   try {
-    // Initialize database
-    console.log('Initializing database...');
-    await initDb();
-    console.log('✓ Database initialized successfully');
+    // Try to initialize database, but don't fail if it's not configured
+    if (config.databaseUrl) {
+      try {
+        console.log('Initializing database...');
+        await initDb();
+        console.log('✓ Database initialized successfully');
+      } catch (dbErr) {
+        console.warn('⚠ Database initialization warning:', dbErr.message);
+        console.warn('Admin code login will still work without database');
+      }
+    } else {
+      console.warn('⚠ No DATABASE_URL configured - database features will be limited');
+    }
 
     // Create Express app
     const app = createApp();
@@ -71,7 +80,7 @@ async function start() {
 ╠═══════════════════════════════════════════════════╣
 ║  Port: ${config.port}                                  ║
 ║  Environment: ${config.nodeEnv.toUpperCase()}                    ║
-║  Database: PostgreSQL                              ║
+║  Database: ${config.databaseUrl ? 'PostgreSQL' : 'Not configured'}    ║
 ╚═══════════════════════════════════════════════════╝
         `);
       });
@@ -87,7 +96,7 @@ async function start() {
     });
 
     // Export for serverless environments
-    export default server;
+    return server;
 
   } catch (err) {
     console.error('Failed to start server:', err.message);
@@ -95,4 +104,4 @@ async function start() {
   }
 }
 
-start();
+export default start();

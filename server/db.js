@@ -1,16 +1,26 @@
 import { Pool } from 'pg';
 import config from './config.js';
 
-// Create connection pool
-const pool = new Pool({
-  connectionString: config.databaseUrl,
-  ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
-});
+// Create connection pool only if database URL is configured
+let pool = null;
 
-// Handle pool errors
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-});
+function getPool() {
+  if (!pool) {
+    if (!config.databaseUrl) {
+      throw new Error('DATABASE_URL environment variable is not configured');
+    }
+    pool = new Pool({
+      connectionString: config.databaseUrl,
+      ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+    });
+
+    // Handle pool errors
+    pool.on('error', (err) => {
+      console.error('Unexpected error on idle client', err);
+    });
+  }
+  return pool;
+}
 
 /**
  * Execute a single query
@@ -18,9 +28,10 @@ pool.on('error', (err) => {
 export async function query(text, params) {
   const start = Date.now();
   try {
-    const result = await pool.query(text, params);
+    const p = getPool();
+    const result = await p.query(text, params);
     const duration = Date.now() - start;
-    console.log('Executed query', { text, duration, rows: result.rowCount });
+    console.log('Executed query', { duration, rows: result.rowCount });
     return result;
   } catch (err) {
     console.error('Database query error:', err.message);
@@ -140,8 +151,11 @@ export async function healthCheck() {
  * Close the pool
  */
 export async function closePool() {
-  await pool.end();
-  console.log('Database pool closed');
+  if (pool) {
+    await pool.end();
+    pool = null;
+    console.log('Database pool closed');
+  }
 }
 
 export default {
