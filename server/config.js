@@ -23,16 +23,12 @@ export const config = {
   // Postgres (Neon on Vercel, local Postgres in development).
   databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || '',
 
-  // Auth
-  jwtSecret:
-    process.env.JWT_SECRET ||
-    'ielts-dev-secret-change-me-in-production-0xDEADBEEF',
-  adminEmail: (process.env.ADMIN_EMAIL || 'shohruxmuminov201@gmail.com')
+  // Admin Configuration
+  adminEmail: (process.env.ADMIN_EMAIL || 'admin@example.com')
     .trim()
     .toLowerCase(),
-  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   adminPassword: process.env.ADMIN_PASSWORD || '',
-  // Simple admin access code for the Admin Panel (default 2010).
+  // Simple admin access code (default 2010).
   adminCode: (process.env.ADMIN_CODE || '2010').toString(),
 
   // Max upload size (default 200 MB; note Vercel caps request body at ~4.5 MB).

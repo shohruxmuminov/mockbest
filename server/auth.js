@@ -1,11 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { OAuth2Client } from 'google-auth-library';
 import config from './config.js';
 import { one } from './db.js';
-
-const googleClient = config.googleClientId
-  ? new OAuth2Client(config.googleClientId)
-  : null;
 
 export function signToken(payload, expiresIn = '12h') {
   return jwt.sign(payload, config.jwtSecret, { expiresIn });
@@ -54,24 +49,7 @@ export async function requireCandidate(req, res, next) {
   }
 }
 
-export async function verifyGoogleAdmin(credential) {
-  if (!googleClient) {
-    throw new Error('GOOGLE_CLIENT_ID is not configured on the server.');
-  }
-  const ticket = await googleClient.verifyIdToken({
-    idToken: credential,
-    audience: config.googleClientId,
-  });
-  const payload = ticket.getPayload();
-  const email = (payload?.email || '').toLowerCase();
-  if (!payload?.email_verified) throw new Error('Google account email is not verified.');
-  if (email !== config.adminEmail) {
-    const err = new Error('This Google account is not authorized for admin access.');
-    err.code = 'FORBIDDEN';
-    throw err;
-  }
-  return { email, name: payload.name, picture: payload.picture };
-}
+
 
 /** Generate a guaranteed-unique 14-digit candidate code. */
 export async function generateCandidateCode() {
