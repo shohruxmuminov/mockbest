@@ -6,8 +6,8 @@ import './Home.css';
 export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [code, setCode] = useState('');
-  const [email, setEmail] = useState('');
+  const [candidateCode, setCandidateCode] = useState('');
+  const [adminCode, setAdminCode] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -15,24 +15,24 @@ export default function Home() {
   const handleCandidateLogin = async (e) => {
     e.preventDefault();
     setError('');
-    if (code.length !== 14) {
+    if (candidateCode.length !== 14) {
       setError('Candidate code must be exactly 14 digits.');
       return;
     }
 
     try {
-      const res = await fetch('/api/candidate/login', {
+      const res = await fetch('/api/auth/candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ code: candidateCode })
       });
       const data = await res.json();
       
-      if (data.success) {
-        login({ ...data.candidate, role: 'candidate' });
-        navigate('/candidate');
+      if (data.token) {
+        login(data.token, { type: 'candidate', ...data.candidate });
+        navigate('/dashboard');
       } else {
-        setError(data.message || 'Invalid Candidate Code');
+        setError(data.error || 'Invalid Candidate Code');
       }
     } catch (err) {
       setError('Connection failed.');
@@ -44,18 +44,18 @@ export default function Home() {
     setError('');
     
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('/api/auth/admin/code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ code: adminCode })
       });
       const data = await res.json();
       
-      if (data.success) {
-        login({ email, role: 'admin' });
+      if (data.token) {
+        login(data.token, { type: 'admin', ...data.admin });
         navigate('/admin');
       } else {
-        setError('Unauthorized Admin Account');
+        setError(data.error || 'Incorrect admin code');
       }
     } catch (err) {
       setError('Connection failed.');
@@ -65,8 +65,8 @@ export default function Home() {
   const openLogin = (adminMode = false) => {
     setIsAdmin(adminMode);
     setError('');
-    setCode('');
-    setEmail('');
+    setCandidateCode('');
+    setAdminCode('');
     setShowLoginModal(true);
   };
 
@@ -191,8 +191,8 @@ export default function Home() {
                     type="text" 
                     className="input" 
                     placeholder="e.g. 12345678901234"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
+                    value={candidateCode}
+                    onChange={(e) => setCandidateCode(e.target.value.replace(/[^0-9]/g, ''))}
                     maxLength={14}
                   />
                 </div>
@@ -204,16 +204,17 @@ export default function Home() {
             ) : (
               <form onSubmit={handleAdminLogin} className="d-flex flex-column gap-3">
                 <div>
-                  <label className="text-light mb-2 d-flex">Admin Google Email</label>
+                  <label className="text-light mb-2 d-flex">Admin Access Code</label>
                   <input 
-                    type="email" 
+                    type="text" 
                     className="input" 
-                    placeholder="shohruxmuminov201@gmail.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter admin code"
+                    value={adminCode}
+                    onChange={(e) => setAdminCode(e.target.value)}
+                    inputMode="numeric"
                   />
                 </div>
-                <button type="submit" className="btn btn-secondary w-100">Sign in with Google</button>
+                <button type="submit" className="btn btn-secondary w-100">Enter Admin Panel</button>
                 <p className="text-center mt-3" style={{ fontSize: '0.9rem', cursor: 'pointer' }} onClick={() => setIsAdmin(false)}>
                   Candidate Login
                 </p>
