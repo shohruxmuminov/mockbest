@@ -15,7 +15,7 @@ export default function AdminLogin() {
     if (session?.type === 'admin') nav('/admin', { replace: true });
   }, [session, nav]);
 
-  const handleSubmit = async (e) => {
+  const submitCode = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -35,27 +35,26 @@ export default function AdminLogin() {
       <div className="card auth-card">
         <LogoMark size={52} />
         <h2>Admin Sign In</h2>
-        <p className="sub">
-          Enter the admin access code to continue.
-        </p>
+        <p className="sub">Enter the admin access code to open the Admin Panel.</p>
 
         {error && <div className="alert alert-err">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
+        {/* Admin access code */}
+        <form onSubmit={submitCode}>
           <div className="field">
-            <label>Admin Access Code</label>
+            <label>Admin Code</label>
             <input
-              className="input"
-              type="text"
+              className="input code-input"
+              type="password"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter 4-digit code"
-              autoComplete="off"
-              disabled={loading}
+              placeholder="Enter admin code"
+              autoFocus
+              inputMode="numeric"
             />
           </div>
           <button className="btn btn-primary btn-block" disabled={loading || !code}>
-            {loading ? 'Signing in…' : 'Sign in as Admin'}
+            {loading ? 'Signing in…' : 'Enter Admin Panel'}
           </button>
         </form>
       </div>

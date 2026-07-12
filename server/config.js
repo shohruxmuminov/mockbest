@@ -32,9 +32,9 @@ export const config = {
   adminEmail: (process.env.ADMIN_EMAIL || 'admin@example.com')
     .trim()
     .toLowerCase(),
-  adminPassword: process.env.ADMIN_PASSWORD || '',
+  adminPassword: (process.env.ADMIN_PASSWORD || '').trim(),
   // Simple admin access code (default 2010).
-  adminCode: (process.env.ADMIN_CODE || '2010').toString(),
+  adminCode: (process.env.ADMIN_CODE || '2010').toString().trim(),
 
   // Max upload size (default 200 MB; note Vercel caps request body at ~4.5 MB).
   maxUploadBytes: parseInt(process.env.MAX_UPLOAD_BYTES || '209715200', 10),
