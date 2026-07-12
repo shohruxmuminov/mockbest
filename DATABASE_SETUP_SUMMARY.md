@@ -59,7 +59,7 @@ CREATE DATABASE mocktest_dev;
 **3. Update Configuration**
 Edit `server/.env.local`:
 ```
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mocktest_dev
+DATABASE_URL=postgresql://postgres.mvcsffrjuqphdgrpname:[XonariqKuchasi8]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
 ```
 
 **4. Start Server**

@@ -42,7 +42,7 @@ GRANT ALL PRIVILEGES ON DATABASE mocktest_dev TO mocktest_user;
 Edit `server/.env.local`:
 
 ```
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mocktest_dev
+DATABASE_URL=postgresql://postgres.mvcsffrjuqphdgrpname:[XonariqKuchasi8]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
 NODE_ENV=development
 ```
 

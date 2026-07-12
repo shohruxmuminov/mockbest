@@ -21,6 +21,10 @@ export const config = {
   // Database Configuration
   databaseUrl: process.env.DATABASE_URL || process.env.POSTGRES_URL || '',
 
+  // Supabase JS client (optional – for Storage, Auth, Realtime)
+  supabaseUrl: process.env.SUPABASE_URL || '',
+  supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+
   // JWT Configuration
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-change-in-production',
 
