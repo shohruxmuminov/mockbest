@@ -1,15 +1,20 @@
 import http from 'http';
 import { Server } from 'socket.io';
 import config from './config.js';
-import { initDb } from './db.js';
+import { initDb as initPostgres } from './db.js';
+import { initDb as initFirestore } from './firestore-db.js';
 import { createApp } from './app.js';
 
 // Create the Express app (used by both local and Vercel)
 const app = createApp();
 
 // Initialize database on cold start (non-blocking so the export isn't delayed)
-if (config.databaseUrl) {
-  initDb()
+if (config.useFirestore) {
+  initFirestore()
+    .then(() => console.log('✓ Firestore initialized successfully'))
+    .catch((e) => console.warn('⚠ Firestore init warning:', e.message));
+} else if (config.databaseUrl) {
+  initPostgres()
     .then(() => console.log('✓ Database initialized successfully'))
     .catch((e) => console.warn('⚠ DB init warning:', e.message));
 }
@@ -67,7 +72,7 @@ if (!process.env.VERCEL) {
 ╠═══════════════════════════════════════════════════╣
 ║  Port: ${config.port}                                  ║
 ║  Environment: ${config.nodeEnv.toUpperCase()}                    ║
-║  Database: ${config.databaseUrl ? 'Supabase PostgreSQL' : 'Not configured'}    ║
+║  Database: ${config.useFirestore ? 'Firestore' : config.databaseUrl ? 'Supabase PostgreSQL' : 'Not configured'}    ║
 ╚═══════════════════════════════════════════════════╝
     `);
   });

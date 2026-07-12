@@ -36,6 +36,15 @@ export const config = {
   // Simple admin access code (default 2010).
   adminCode: (process.env.ADMIN_CODE || '2010').toString().trim(),
 
+  // Firebase / Firestore Configuration
+  firebaseProjectId: process.env.FIREBASE_PROJECT_ID || '',
+  firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
+  firebasePrivateKey: process.env.FIREBASE_PRIVATE_KEY || '',
+  firebaseServiceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '',
+
+  // Use Firestore instead of PostgreSQL (set to 'true' to enable)
+  useFirestore: process.env.USE_FIRESTORE === 'true',
+
   // Max upload size (default 200 MB; note Vercel caps request body at ~4.5 MB).
   maxUploadBytes: parseInt(process.env.MAX_UPLOAD_BYTES || '209715200', 10),
 

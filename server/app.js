@@ -24,7 +24,26 @@ export function createApp() {
   app.use(cookieParser());
 
   // Health check does not require the database.
-  app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+  app.get('/api/health', (req, res) => {
+    res.json({
+      status: 'ok',
+      time: new Date().toISOString(),
+      database: config.useFirestore ? 'firestore' : config.databaseUrl ? 'postgresql' : 'none',
+    });
+  });
+
+  // Firestore-specific health check (only when configured)
+  if (config.useFirestore) {
+    app.get('/api/health/firestore', async (req, res, next) => {
+      try {
+        const { healthCheck } = await import('./firestore-db.js');
+        const result = await healthCheck();
+        res.json({ status: 'ok', ...result });
+      } catch (err) {
+        next(err);
+      }
+    });
+  }
 
   // Data routes ensure the schema lazily (via db.query), so DB-free routes such
   // as admin code login work even before a database is configured.
