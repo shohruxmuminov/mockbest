@@ -60,7 +60,7 @@ export function createApp() {
   // files are served by the platform and only /api/* reaches this app.
   if (fs.existsSync(config.clientDist)) {
     app.use(express.static(config.clientDist));
-    app.get('*', (req, res, next) => {
+    app.use((req, res, next) => {
       if (req.path.startsWith('/api/')) return next();
       res.sendFile(path.join(config.clientDist, 'index.html'));
     });
