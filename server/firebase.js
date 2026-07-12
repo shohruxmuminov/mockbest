@@ -2,7 +2,12 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore as getFirestoreAdmin } from 'firebase-admin/firestore';
 import { getAuth as getAuthAdmin } from 'firebase-admin/auth';
 import { readFileSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { config } from './config.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let firebaseApp = null;
 
@@ -25,7 +30,9 @@ export function getFirebaseApp() {
 
   // If a service account file path is provided, load it
   if (firebaseServiceAccountPath) {
-    const serviceAccount = JSON.parse(readFileSync(firebaseServiceAccountPath, 'utf8'));
+    // Resolve the path relative to this module's directory
+    const resolvedPath = path.resolve(__dirname, firebaseServiceAccountPath);
+    const serviceAccount = JSON.parse(readFileSync(resolvedPath, 'utf8'));
     firebaseApp = initializeApp({
       credential: cert(serviceAccount),
       projectId: serviceAccount.project_id || firebaseProjectId,
