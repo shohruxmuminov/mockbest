@@ -1,4 +1,4 @@
-import admin from 'firebase-admin';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore as getFirestoreAdmin } from 'firebase-admin/firestore';
 import { getAuth as getAuthAdmin } from 'firebase-admin/auth';
 import { readFileSync } from 'fs';
@@ -19,13 +19,14 @@ export function getFirebaseApp() {
   // If a service account file path is provided, load it
   if (firebaseServiceAccountPath) {
     const serviceAccount = JSON.parse(readFileSync(firebaseServiceAccountPath, 'utf8'));
-    firebaseApp = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
+    firebaseApp = initializeApp({
+      credential: cert(serviceAccount),
+      projectId: serviceAccount.project_id || firebaseProjectId,
     });
   } else if (firebaseClientEmail && firebasePrivateKey) {
     // Use explicit service account credentials from env vars
-    firebaseApp = admin.initializeApp({
-      credential: admin.credential.cert({
+    firebaseApp = initializeApp({
+      credential: cert({
         projectId: firebaseProjectId,
         clientEmail: firebaseClientEmail,
         privateKey: firebasePrivateKey.replace(/\\n/g, '\n'),
@@ -33,7 +34,7 @@ export function getFirebaseApp() {
     });
   } else {
     // Fallback to application default credentials
-    firebaseApp = admin.initializeApp({
+    firebaseApp = initializeApp({
       projectId: firebaseProjectId,
     });
   }
