@@ -14,6 +14,13 @@ let firebaseApp = null;
 export function getFirebaseApp() {
   if (firebaseApp) return firebaseApp;
 
+  // Check if Firebase app was already initialized (e.g. by another module)
+  const apps = getApps();
+  if (apps.length > 0) {
+    firebaseApp = apps[0];
+    return firebaseApp;
+  }
+
   const { firebaseServiceAccountPath, firebaseProjectId, firebaseClientEmail, firebasePrivateKey } = config;
 
   // If a service account file path is provided, load it
