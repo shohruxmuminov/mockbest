@@ -7,24 +7,12 @@ const router = express.Router();
 
 router.get('/config', (req, res) => {
   res.json({
-    codeEnabled: Boolean(config.adminCode),
     adminEmail: config.adminEmail,
   });
 });
 
 // Admin auto-login — no code required. The admin clicks the button and goes straight in.
-router.post('/admin/auto-login', (req, res) => {
-  const token = signToken({ role: 'admin', email: config.adminEmail });
-  res.json({ token, admin: { email: config.adminEmail, name: 'Administrator' } });
-});
-
-// Admin login via a simple access code (default 2010).
-router.post('/admin/code', (req, res) => {
-  const code = (req.body?.code ?? '').toString().trim();
-  if (!config.adminCode) return res.status(404).json({ error: 'Code login is disabled.' });
-  if (!code || code !== config.adminCode) {
-    return res.status(401).json({ error: 'Incorrect admin code.' });
-  }
+router.post('/admin/login', (req, res) => {
   const token = signToken({ role: 'admin', email: config.adminEmail });
   res.json({ token, admin: { email: config.adminEmail, name: 'Administrator' } });
 });

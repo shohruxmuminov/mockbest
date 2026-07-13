@@ -23,7 +23,7 @@ export default function AdminLogin() {
     setLoading(true);
     setError('');
     try {
-      const { token, admin } = await api.post('/auth/admin/auto-login');
+      const { token, admin } = await api.post('/auth/admin/login');
       login(token, { type: 'admin', ...admin });
       nav('/admin', { replace: true });
     } catch (err) {
