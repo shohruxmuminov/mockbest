@@ -1,5 +1,5 @@
 import express from 'express';
-import { one } from '../db.js';
+import { one } from '../db-selector.js';
 import config from '../config.js';
 import { signToken } from '../auth.js';
 

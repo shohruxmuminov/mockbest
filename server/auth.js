@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import config from './config.js';
-import { one } from './db.js';
+import { one } from './db-selector.js';
 
 export function signToken(payload, expiresIn = '12h') {
   return jwt.sign(payload, config.jwtSecret, { expiresIn });

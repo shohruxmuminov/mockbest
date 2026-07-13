@@ -1,5 +1,5 @@
 import express from 'express';
-import { query, one } from '../db.js';
+import { query, one } from '../db-selector.js';
 import { requireCandidate } from '../auth.js';
 
 const router = express.Router();

@@ -1,23 +1,16 @@
 import http from 'http';
 import { Server } from 'socket.io';
 import config from './config.js';
-import { initDb as initPostgres } from './db.js';
-import { initDb as initFirestore } from './firestore-db.js';
+import { initDb } from './db-selector.js';
 import { createApp } from './app.js';
 
 // Create the Express app (used by both local and Vercel)
 const app = createApp();
 
-// Initialize database on cold start (non-blocking so the export isn't delayed)
-if (config.useFirestore) {
-  initFirestore()
-    .then(() => console.log('✓ Firestore initialized successfully'))
-    .catch((e) => console.warn('⚠ Firestore init warning:', e.message));
-} else if (config.databaseUrl) {
-  initPostgres()
-    .then(() => console.log('✓ Database initialized successfully'))
-    .catch((e) => console.warn('⚠ DB init warning:', e.message));
-}
+// Initialize database on cold start (delegates to the correct backend)
+initDb()
+  .then(() => console.log('✓ Database initialized successfully'))
+  .catch((e) => console.warn('⚠ DB init warning:', e.message));
 
 // ---------- Local development: full HTTP server + Socket.io ----------
 if (!process.env.VERCEL) {
