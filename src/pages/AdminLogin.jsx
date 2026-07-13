@@ -6,21 +6,24 @@ import { LogoMark } from '../components/Logo.jsx';
 
 export default function AdminLogin() {
   const [error, setError] = useState('');
-  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const { session, login } = useAuth();
   const nav = useNavigate();
 
   useEffect(() => {
-    if (session?.type === 'admin') nav('/admin', { replace: true });
+    if (session?.type === 'admin') {
+      nav('/admin', { replace: true });
+      return;
+    }
+    // Auto-login: directly sign in without code
+    autoLogin();
   }, [session, nav]);
 
-  const submitCode = async (e) => {
-    e.preventDefault();
-    setError('');
+  const autoLogin = async () => {
     setLoading(true);
+    setError('');
     try {
-      const { token, admin } = await api.post('/auth/admin/code', { code });
+      const { token, admin } = await api.post('/auth/admin/auto-login');
       login(token, { type: 'admin', ...admin });
       nav('/admin', { replace: true });
     } catch (err) {
@@ -35,28 +38,16 @@ export default function AdminLogin() {
       <div className="card auth-card">
         <LogoMark size={52} />
         <h2>Admin Sign In</h2>
-        <p className="sub">Enter the admin access code to open the Admin Panel.</p>
+        <p className="sub">{loading ? 'Signing in...' : 'Redirecting to Admin Panel...'}</p>
 
-        {error && <div className="alert alert-err">{error}</div>}
-
-        {/* Admin access code */}
-        <form onSubmit={submitCode}>
-          <div className="field">
-            <label>Admin Code</label>
-            <input
-              className="input code-input"
-              type="password"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter admin code"
-              autoFocus
-              inputMode="numeric"
-            />
-          </div>
-          <button className="btn btn-primary btn-block" disabled={loading || !code}>
-            {loading ? 'Signing in…' : 'Enter Admin Panel'}
-          </button>
-        </form>
+        {error && (
+          <>
+            <div className="alert alert-err">{error}</div>
+            <button className="btn btn-primary btn-block" onClick={autoLogin} style={{ marginTop: 12 }}>
+              Retry
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
