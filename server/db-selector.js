@@ -56,7 +56,7 @@ function extractSetClause(sql) {
   const m = sql.match(/SET\s+(.+?)(?:WHERE|RETURNING|$)/i);
   if (!m) return result;
   m[1].split(',').map(a => a.trim()).forEach(a => {
-    const p = a.match(/"(\w+)"\s*=\s*\$(\d+)/);
+    const p = a.match(/"?(\w+)"?\s*=\s*\$(\d+)/);
     if (p) result[p[1]] = parseInt(p[2], 10);
   });
   return result;
@@ -67,7 +67,7 @@ function extractWhere(sql) {
   const m = sql.match(/WHERE\s+(.+?)(?:ORDER\s+BY|LIMIT|RETURNING|$)/i);
   if (!m) return result;
   m[1].split(/\s+AND\s+/i).forEach(c => {
-    const p = c.match(/"(\w+)"\s*=\s*\$(\d+)/);
+    const p = c.match(/"?(\w+)"?\s*=\s*\$(\d+)/);
     if (p) result[p[1]] = parseInt(p[2], 10);
   });
   return result;
