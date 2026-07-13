@@ -50,7 +50,7 @@ export default function Navbar({ theme, onToggleTheme }) {
         )}
         {!session && (
           <>
-            <Link to="/admin/login" className="btn btn-ghost btn-sm">🛡️ Admin</Link>
+            <Link to="/admin" className="btn btn-ghost btn-sm">🛡️ Admin</Link>
             <Link to="/login" className="btn btn-primary btn-sm">Sign In</Link>
           </>
         )}
